@@ -3,6 +3,7 @@
 ## Resources
 
 [Info](AIML_Summer_Grand_Challenge_Rules_Updated.pdf)\
+[Dataset Description](https://grand-challenge.aiml.team/details.html)\
 [Submission Portal](https://grand-challenge.aiml.team/)\
 [Technical Report](technical_report.md)\
 [Todo List](TODO.md)

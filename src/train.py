@@ -9,9 +9,9 @@ import models.RGBDResNet as RGBDResNet
 
 PROCESSED_CSV = 'data/Processed/Train/Train.csv'
 PROCESSED_ROOT = 'data/Processed/Train'
-VALIDATION_SPLIT = 0.2
+VALIDATION_SPLIT = 0.1
 BATCH_SIZE = 16
-EPOCHS = 50
+EPOCHS = 100
 LR = 0.0001
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

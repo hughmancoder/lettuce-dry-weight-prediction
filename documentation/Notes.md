@@ -14,7 +14,7 @@ Unit: cm
 
 ## LeafArea
 
-Meaning: Estimated total combined leaf surface area — an indicator of photosynthetic capacity.
+Meaning: Estimated total combined leaf surface area \
 Unit cm^2
 
 ## FreshWeightShoot

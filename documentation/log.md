@@ -1,0 +1,12 @@
+# Model
+
+# Resnet 18
+
+Train 2
+VALIDATION_SPLIT = 0.1
+BATCH_SIZE = 16
+EPOCHS = 100
+LR = 0.0001
+
+Train 3
+BATCH_SIZE = 32
