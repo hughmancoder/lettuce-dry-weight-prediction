@@ -5,8 +5,7 @@
 [Info](AIML_Summer_Grand_Challenge_Rules_Updated.pdf)\
 [Dataset Description](https://grand-challenge.aiml.team/details.html)\
 [Submission Portal](https://grand-challenge.aiml.team/)\
-[Technical Report](technical_report.md)\
-[Todo List](TODO.md)
+[Technical Report](technical_report.md)
 
 ## Setup
 
@@ -28,7 +27,7 @@ The dataset is structured as follows
 data/Test
 data/Training
 
-# generated
+# generated via make preprocess
 data/Processed/Test
 data/Processed/Train
 ```
@@ -37,8 +36,9 @@ data/Processed/Train
 
 ```text
 make preprocess # run preprocessing pipeline
-make train # interface your model
-make test # generate output csv
+make train
+make test
+make pipeline 
 ```
 
 ## Submission
@@ -47,4 +47,3 @@ The model predictions are saved in the `outputs/` folder for example
 `outputs/resnet-18/prediction.csv`
 
 Email to: `grand-challenge@aiml.team`
-

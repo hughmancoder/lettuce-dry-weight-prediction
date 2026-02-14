@@ -2,60 +2,64 @@
 
 ## Resources
 
-[GitHub Repo](https://github.com/hughmancoder/lettuce-dry-weight-prediction)
+* **GitHub Repo:** [hughmancoder/lettuce-dry-weight-prediction](https://github.com/hughmancoder/lettuce-dry-weight-prediction)
+* **Competition Notes:** `documentation/Notes.md`
 
-## Problem
+## Problem Statement
 
-Goal: Predict the dry shoot weight (g/plant) of lettuce from RGB and depth images.
+The goal is to predict **DryWeightShoot** (g/plant) using paired RGB and depth images.
 
-Metric: The model should minimise the Mean Absolute Error (MAE) between the predicted and actual [dry shoot weights](https://www.wisdomlib.org/concept/dry-shoot-weight#:~:text=The%20concept%20of%20Dry%20shoot%20weight%20in%20scientific%20sources&text=Dry%20shoot%20weight%20is%20the%20measured%20mass%20of%20a%20plant's,effectiveness%20of%20different%20growth%20strategies.&text=(1)%20Dry%20shoot%20weight%20refers,increased%20with%20bio%2Dstimulant%20treatments.) 
+* **Primary Metric:** Mean Absolute Error (MAE).
+* **Dataset:**  labelled training samples.
+* **Privileged Information:** Fresh weight and plant height are available during training to help regularise the model and improve feature representation.
 
-Further information about the context can be found [here](documentation/Notes.md)
+---
 
-## Preprocessing
+## Strategy Implemented
 
-The [preprocessing pipeline](src/preprocessing.py) conforms to the following specifications:
+### 1. Early-Fusion ResNet18 Architecture
 
-- Crops RGB and depth images to a standard region: A crop scale of 0.7 was found to be appropriate
+Instead of a dual-stream approach, the model uses a single-stream **ResNet18** modified for **4-channel input** (RGB + Height Map).
 
-- Normalizes depth values to [0,1]. (Depth image is normalised based on 16-bit depth range (2^16 - 1 = 65535)
-RGB pixel values originally 0-255 are normalised to the range [0, 1] within the src/dataset.py __getitem__ method.
+* **Input Layer:** The first convolutional layer was expanded from 3 to 4 channels.
+* **Weight Initialisation:** To leverage ImageNet pretraining, the first 3 channels use standard weights, while the 4th (height) channel is initialised using the mean of the RGB weights.
+* **Backbone:** The final fully connected layer is replaced with an `Identity` block to extract 512-dimensional features.
 
-- Saves processed images into structured directories ()
+### 2. Multi-Task Learning (MTL)
 
-- Supports both full dataset and train/test subset processing.
+The model features three independent linear heads to predict primary and auxiliary targets simultaneously:
 
-An image size of 224 was chosen as a standard input resolution for many well-known image classification models and is useful for transfer learning
+1. **Dry Weight** (Primary)
+2. **Fresh Weight** (Auxiliary)
+3. **Plant Height** (Auxiliary)
 
-## Model designs, and results
+### 3. Weighted Multi-Task Loss
 
-### Residual nets
+The model is optimised using a weighted Mean Absolute Error (MAE) loss function to prioritise the primary target while benefiting from the auxiliary signals:
 
-- ResNet was the suggested baseline model primarily because it solves the core problem of training very deep neural networks and is effective for Transfer Learning in computer vision.
-- Given the small size of the dataset N = 232 training samples, this approach is highly useful as features from existing weights can be reused and training a complex model from scratch could lead to  overfitting
+---
+
+## Preprocessing & Data Augmentation
+
+### Preprocessing Pipeline
+
+* **Height Mapping:** Raw depth data is transformed into a height map: .
+* **Normalisation:** RGB channels are normalised using ImageNet statistics 
+
+### Synchronised Augmentation
+
+To maintain spatial alignment between the RGB image and the Height Map, the following transforms are applied **identically** to both inputs:
+
+* **Geometric:** Random horizontal flips, random vertical flips, and random rotations
+* **Photometric:** `ColorJitter` (brightness and contrast) is applied **only** to the RGB channels to prevent distorting the physical meaning of the height map.
 
 
-### [RGBDResNet](src/models/RGBDResNet.py)
+## Training 
 
-- Pre-trained Weights: ResNet models (ResNet-18, ResNet-34) come pre-trained on the massive ImageNet dataset
-- Training parameters: these were chosen as a sensible baseline, we will later experiment with others.
-- L1Loss optimises for mean absolute error target
+The training process uses a robust **5-fold Cross-Validation** strategy:
 
-**Modifications**
-
-- The model is a 4-channel [ResNet_18](https://docs.pytorch.org/vision/main/models/generated/torchvision.models.resnet18.html) model with image channels using 3 channels and depth being the 4th channel.
-- The weights for the  4th  channel were initialised by taking the mean of the existing 3 RGB pre-trained weights. This ensures the new channel starts with sensible weights, preserving the benefit of pre-training.
-- The final classification layer was replaced with a new regression head consisting of an nn.Linear layer, a ReLU activation, a Dropout layer, and a final nn.Linear layer outputting to output a single Dry Shoot Weight prediction
-  
-```
-Validation Split = 0.2
-BATCH_SIZE = 16
-EPOCHS = 50
-LR = 0.0001
-DROPOUT = 0.3
-```
-
-**Benchmarks**
-
-Train MAE: 0.6770 | Val MAE: 0.6581
-
+* **Optimiser:** `AdamW` with a learning rate of  and weight decay.
+* **Validation:** The best model per fold is saved based on the validation MAE of the `DryWeightShoot` head.
+* **Outputs:**
+* Fold checkpoints: `weights/model/model_fold_*.pth`
+* Out-of-fold (OOF) predictions: `outputs/model/oof_predictions.csv`

@@ -1,6 +1,6 @@
 # Model
 
-# Resnet 18
+## Resnet 18
 
 Train 2
 VALIDATION_SPLIT = 0.1
@@ -10,3 +10,6 @@ LR = 0.0001
 
 Train 3
 BATCH_SIZE = 32
+
+MAE 2.02
+##
